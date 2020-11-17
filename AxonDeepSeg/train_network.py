@@ -25,6 +25,7 @@ import tensorflow as tf
 from albumentations import *
 import random
 import cv2
+import json
 
 
 
@@ -212,19 +213,39 @@ def train_model(
 
     model = uconv_net(config, bn_updated_decay=None, verbose=True)
 
-
-      # Load model
+    print("Path of the model is ", path_model)
+    
+    print("**************Loading the best TEM model*****************")
+    # Load model
     custom_objects = {
         "dice_axon": dice_axon,
         "dice_myelin": dice_myelin,
         "dice_coef_loss": dice_coef_loss,
     }
-    print("Path of the model is ", path_model)
     
+
     model = load_model(
         str(path_model) + "/model.hdf5", custom_objects=custom_objects
     )
+    print("************** TEM model loaded *****************")
 
+
+    print("**************Summary of the model is *****************")
+    print(model.summary())
+
+    print("************** Freezing the encoder layers *****************")
+    ################## Freezing the encoder layer ########################
+
+    layer_names=[layer.name for layer in model.layers]
+    print(layer_names)
+    for i in layer_names:
+        if i=="up_sampling2d_1":
+            break
+        model.get_layer(i).trainable = False
+
+    print("**************Summary of the model is *****************")
+    print(model.summary())
+    
     ########################### Tensorboard for Visualization ###########
     tensorboard = TensorBoard(log_dir=str(path_model))
 
@@ -286,7 +307,7 @@ def train_model(
         model.load_weights(filepath_acc)
 
 
-    
+
 
     model.fit_generator(
         train_generator,
@@ -296,6 +317,7 @@ def train_model(
         epochs=epochs,
         callbacks=[tensorboard, checkpoint_loss, checkpoint_acc],
     )
+
 
     ########################## Save the model after Training ###########
 
@@ -375,7 +397,7 @@ def dice_coef_loss(y_true, y_pred):
 
 def main():
     import argparse
-
+    '''
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--path_training", required=True, help="")
     ap.add_argument("-m", "--path_model", required=True, help="")
@@ -395,10 +417,18 @@ def main():
     path_model_init = Path(args["path_model_init"])
     config_file = args["config_file"]
     gpu = args["GPU"]
+    '''
+    
 
-    config = generate_config(config_file)
+    path_training = Path("/Users/vasudevsharma/VScode/Projects/axondeepseg/notebooks/training")
+    path_model = Path("/Users/vasudevsharma/VScode/Projects/axondeepseg/AxonDeepSeg/models/default_TEM_model")
+    config_path = "/Users/vasudevsharma/VScode/Projects/axondeepseg/AxonDeepSeg/models/default_SEM_model/config_network.json"
+    
+    #config = generate_config(config)
+    with open(config_path) as conf_file:
+        config = json.load(conf_file)
 
-    train_model(path_training, path_model, config, path_model_init, gpu=gpu)
+    train_model(path_training, path_model, config, path_model_init = None, gpu=None)
 
 
 if __name__ == "__main__":
