@@ -397,7 +397,7 @@ def dice_coef_loss(y_true, y_pred):
 
 def main():
     import argparse
-    '''
+    
     ap = argparse.ArgumentParser()
     ap.add_argument("-p", "--path_training", required=True, help="")
     ap.add_argument("-m", "--path_model", required=True, help="")
@@ -417,16 +417,7 @@ def main():
     path_model_init = Path(args["path_model_init"])
     config_file = args["config_file"]
     gpu = args["GPU"]
-    '''
-    
-
-    path_training = Path("/Users/vasudevsharma/VScode/Projects/axondeepseg/notebooks/training")
-    path_model = Path("/Users/vasudevsharma/VScode/Projects/axondeepseg/AxonDeepSeg/models/default_TEM_model")
-    config_path = "/Users/vasudevsharma/VScode/Projects/axondeepseg/AxonDeepSeg/models/default_SEM_model/config_network.json"
-    
-    #config = generate_config(config)
-    with open(config_path) as conf_file:
-        config = json.load(conf_file)
+    config = generate_config(config)
 
     train_model(path_training, path_model, config, path_model_init = None, gpu=None)
 
