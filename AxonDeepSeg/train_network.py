@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 
 from AxonDeepSeg.network_construction import *
 from AxonDeepSeg.data_management.input_data import *
@@ -22,6 +25,7 @@ import tensorflow as tf
 from albumentations import *
 import random
 import cv2
+
 
 
 def train_model(
@@ -208,6 +212,19 @@ def train_model(
 
     model = uconv_net(config, bn_updated_decay=None, verbose=True)
 
+
+      # Load model
+    custom_objects = {
+        "dice_axon": dice_axon,
+        "dice_myelin": dice_myelin,
+        "dice_coef_loss": dice_coef_loss,
+    }
+    print("Path of the model is ", path_model)
+    
+    model = load_model(
+        str(path_model) + "/model.hdf5", custom_objects=custom_objects
+    )
+
     ########################### Tensorboard for Visualization ###########
     tensorboard = TensorBoard(log_dir=str(path_model))
 
@@ -225,10 +242,13 @@ def train_model(
         metrics=["accuracy", dice_axon, dice_myelin],
     )
 
+
     train_steps = len(train_ids) // batch_size
     valid_steps = len(valid_ids) // batch_size
 
     ########################## Use Checkpoints to save best Accuracy and Loss ###########
+
+    print("The checkpoint stored in config file is", checkpoint)
 
     # Save the checkpoint in the /models/path_model folder
     filepath_acc = str(path_model) + "/best_acc_model.ckpt"
@@ -256,12 +276,17 @@ def train_model(
         period=checkpoint_period,
     )
 
+
+
     ########################## Training ###########
     
     if checkpoint == "loss":
         model.load_weights(filepath_loss)
     elif checkpoint == "accuracy":
         model.load_weights(filepath_acc)
+
+
+    
 
     model.fit_generator(
         train_generator,
