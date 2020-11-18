@@ -215,7 +215,9 @@ def train_model(
 
     print("Path of the model is ", path_model)
     
-    print("**************Loading the best TEM model*****************")
+    ########################## Transfer Learning #########################
+
+    print("**************Loading the  TEM model*****************")
     # Load model
     custom_objects = {
         "dice_axon": dice_axon,
@@ -419,7 +421,7 @@ def main():
     gpu = args["GPU"]
     config = generate_config(config)
 
-    train_model(path_training, path_model, config, path_model_init = None, gpu=None)
+    train_model(path_training, path_model, config, path_model_init, gpu=gpu)
 
 
 if __name__ == "__main__":
