@@ -1,5 +1,6 @@
 from keras.layers import *
 from keras.models import *
+from keras.layers import Reshape
 
 import tensorflow as tf
 import AxonDeepSeg.ads_utils
@@ -141,7 +142,7 @@ def uconv_net(training_config, bn_updated_decay=None, verbose=True):
                             bn_decay=bn_decay,keep_prob=dropout, name='econv-d' + str(depth - i - 1) + '-c' + str(conv_number))
 
     net = Conv2D(filters=n_classes, kernel_size=1, strides=1, name='finalconv', padding='same', activation="softmax")(net)
-
+    net = Reshape((512 * 512, 3))(net) # reshape the output prediction: None, training_patch_size * training_patch_size, channels so that sample weights can be used
     model = Model(inputs=X, outputs=net)
 
     return model
