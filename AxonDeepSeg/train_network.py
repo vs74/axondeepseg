@@ -22,6 +22,7 @@ import tensorflow as tf
 from albumentations import *
 import random
 import cv2
+import matplotlib.pyplot as plt
 
 
 def train_model(
@@ -193,6 +194,18 @@ def train_model(
         thresh_indices=thresh_indices,
         augmentations=AUGMENTATIONS_TRAIN,
     )
+    
+    #debugging 
+    images, masks, weights = train_generator[0]
+    print(images.shape)
+    print(masks.shape)
+    print(weights.shape)
+    print(np.unique(images[0]))
+    print(np.unique(np.argmax(masks[0], axis = 1)))
+    print(np.unique(weights[5]))
+
+    
+
 
     # Loading the Validation images and masks in batch
     valid_generator = DataGen(
@@ -223,6 +236,7 @@ def train_model(
         optimizer=adam,
         loss=dice_coef_loss,
         metrics=["accuracy", dice_axon, dice_myelin],
+        sample_weight_mode="temporal",
     )
 
     train_steps = len(train_ids) // batch_size
@@ -263,6 +277,8 @@ def train_model(
     elif checkpoint == "accuracy":
         model.load_weights(filepath_acc)
 
+    print(model.summary())
+    
     model.fit_generator(
         train_generator,
         validation_data=(valid_generator),
