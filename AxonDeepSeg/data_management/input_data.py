@@ -42,7 +42,8 @@ class DataGen(keras.utils.Sequence):
         self.on_epoch_end()
         self.thresh_indices = thresh_indices
         self.augment = augmentations
-
+        self.weight = {0: 1, 127: 1.5, 255: 2.8}   # In the weight dict, 0 index denotes background, 127 index denotes the myelin and 255 index denotes axon
+                                                   # In the weight dict, the values denotes the weight of the corresponding pixel value
     def __load__(self, id_name):
         """
           Loads images and masks
@@ -87,16 +88,32 @@ class DataGen(keras.utils.Sequence):
         for x, y in zip(images, masks):
             aug = self.augment(image=x, mask=y)
             image_aug.append(aug["image"])
+            aug["mask"] = aug["mask"].reshape(-1, 3)
             mask_aug.append(aug["mask"])
         image_aug = np.array(image_aug)
         mask_aug = np.array(mask_aug)
-        return (image_aug, mask_aug)
+        weights = self.generate_sample_weights(mask_aug)
+
+        # self.generate_sample_weights(mask, self.weight)
+        return (image_aug, mask_aug, weights)
 
     def on_epoch_end(self):
         pass
 
     def __len__(self):
         return int(np.ceil(len(self.ids) / float(self.batch_size)))
+       
+    def generate_sample_weights(self, masks): 
+        #replaces values for up to 3 classes with the values from class_weights#
+        sample_weights = []
+        for mask in masks:
+            argmax_mask = np.argmax(mask, axis = 1)
+            argmax_mask = np.where(argmax_mask == 0, self.weight[0], 
+            np.where(argmax_mask == 1, self.weight[127], 
+            np.where(argmax_mask == 2, self.weight[255], argmax_mask
+            )))
+            sample_weights.append(argmax_mask)
+        return np.asarray(sample_weights)
 
 
 def labellize_mask_2d(patch, thresh_indices=[0, 0.2, 0.8]):
