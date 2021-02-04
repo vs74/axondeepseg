@@ -268,10 +268,7 @@ def axon_segmentation(path_acquisitions_folders, acquisitions_filenames, path_mo
 
     # Final part of the function : generating the image if needed/ returning values
     if write_mode:
-        for i, pred in enumerate(prediction):
-
-            #pred = pred.reshape((512, 512, -1)) # reshape the predictions again to patch_size, patch_size, channels
-            
+        for i, pred in enumerate(prediction):            
             # Transform the prediction to an image
             n_classes = config_dict['n_classes']
             paint_vals = [int(255 * float(j) / (n_classes - 1)) for j in range(n_classes)]
