@@ -269,7 +269,9 @@ def axon_segmentation(path_acquisitions_folders, acquisitions_filenames, path_mo
     # Final part of the function : generating the image if needed/ returning values
     if write_mode:
         for i, pred in enumerate(prediction):
-            pred = pred.reshape((512, 512, -1)) # reshape the predictions again to patch_size, patch_size, channels
+            print("Shape of the prediction is")
+            print(pred.shape)
+            #pred = pred.reshape((512, 512, -1)) # reshape the predictions again to patch_size, patch_size, channels
             
             # Transform the prediction to an image
             n_classes = config_dict['n_classes']
@@ -470,7 +472,7 @@ def perform_batch_inference(model, tf_session, tf_prediction_op, tf_input, batch
     batch_x = np.reshape(batch_x,(size_batch, input_size, input_size, 1))
 
     p = model.predict(batch_x)
-
+    p = p.reshape((size_batch, 512, 512, -1 ))
     Mask = np.argmax(p, axis=3)  # Now Mask is a 256*256 mask with Mask[i,j] = pixel_class
 
     batch_predictions_list = [np.squeeze(e) for e in np.split(Mask, size_batch, axis=0)]
